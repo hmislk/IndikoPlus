@@ -567,13 +567,14 @@ public class IndikoServer {
 
         // Result value parsing assumes the result is in the fourth field
         double resultValue = 0.0;
+        String resultValueString = fields[3];
         try {
             resultValue = Double.parseDouble(fields[3]);
             logger.debug("Result value extracted: {}", resultValue);
         } catch (NumberFormatException e) {
             logger.error("Failed to parse result value from segment: {}", resultSegment, e);
         }
-
+        
         // Units and other details
         String resultUnits = fields[4];
         logger.debug("Result units extracted: {}", resultUnits);
@@ -586,7 +587,7 @@ public class IndikoServer {
         return new ResultsRecord(
                 frameNumber,
                 testCode,
-                resultValue,
+                resultValueString,
                 resultUnits,
                 resultDateTime,
                 instrumentName,

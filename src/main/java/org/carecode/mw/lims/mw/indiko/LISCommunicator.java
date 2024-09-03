@@ -95,6 +95,13 @@ public class LISCommunicator {
             System.out.println("SettingsLoader.getSettings().getLimsSettings().getLimsServerBaseUrl() = " + SettingsLoader.getSettings().getLimsSettings().getLimsServerBaseUrl());
             String pushResultsEndpoint = SettingsLoader.getSettings().getLimsSettings().getLimsServerBaseUrl() + "/test_results";
 
+            
+            for(ResultsRecord rr:patientDataBundle.getResultsRecords()){
+                System.out.println("rr value  = " + rr.getResultValue() + "");
+                System.out.println("rr value string = " + rr.getResultValueString());
+            }
+            
+            
             URL url = new URL(pushResultsEndpoint);
             System.out.println("url = " + url);
             HttpURLConnection conn = (HttpURLConnection) url.openConnection();
