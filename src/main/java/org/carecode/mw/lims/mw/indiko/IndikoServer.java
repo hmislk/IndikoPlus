@@ -568,6 +568,7 @@ public class IndikoServer {
         // Result value parsing assumes the result is in the fourth field
         double resultValue = 0.0;
         String resultValueString = fields[3];
+        
         try {
             resultValue = Double.parseDouble(fields[3]);
             logger.debug("Result value extracted: {}", resultValue);
