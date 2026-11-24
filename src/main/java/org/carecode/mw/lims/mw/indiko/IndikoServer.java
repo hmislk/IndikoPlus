@@ -116,13 +116,13 @@ public class IndikoServer {
 
                 switch (data) {
                     case ENQ:
-                        logger.debug("Received ENQ");
+                        //logger.debug("Received ENQ");
                         out.write(ACK);
                         out.flush();
-                        logger.debug("Sent ACK");
+                        //logger.debug("Sent ACK");
                         break;
                     case ACK:
-                        logger.debug("ACK Received.");
+                        //logger.debug("ACK Received.");
                         handleAck(clientSocket, out);
                         break;
                     case STX:
@@ -137,14 +137,14 @@ public class IndikoServer {
                             message.append((char) data);
                             asciiDebugInfo.append("[").append(data).append("] ");  // Append ASCII value in brackets
                         }
-                        logger.debug("Message received: " + message);
+                        //logger.debug("Message received: " + message);
                         processMessage(message.toString(), clientSocket);
                         out.write(ACK);
                         out.flush();
-                        logger.debug("Sent ACK after STX-ETX block");
+                        //logger.debug("Sent ACK after STX-ETX block");
                         break;
                     case EOT:
-                        logger.debug("EOT Received");
+                        //logger.debug("EOT Received");
                         handleEot(out);
                         break;
                     default:
@@ -166,15 +166,16 @@ public class IndikoServer {
         System.out.println("handleAck = ");
         System.out.println("needToSendHeaderRecordForQuery = " + needToSendHeaderRecordForQuery);
         if (needToSendHeaderRecordForQuery) {
-            logger.debug("Sending Header");
+            //logger.debug("Sending Header");
             String hm = createLimsHeaderRecord();
             sendResponse(hm, clientSocket);
             frameNumber = 2;
             needToSendHeaderRecordForQuery = false;
             needToSendPatientRecordForQuery = true;
         } else if (needToSendPatientRecordForQuery) {
-            logger.debug("Creating Patient record ");
+            //logger.debug("Creating Patient record ");
             patientRecord = getPatientDataBundle().getPatientRecord();
+            
             if (patientRecord.getPatientName() == null) {
                 patientRecord.setPatientName("Buddhika");
             }
@@ -185,7 +186,7 @@ public class IndikoServer {
             needToSendPatientRecordForQuery = false;
             needToSendOrderingRecordForQuery = true;
         } else if (needToSendOrderingRecordForQuery) {
-            logger.debug("Creating Order record ");
+            //logger.debug("Creating Order record ");
             if (testNames == null || testNames.isEmpty()) {
                 testNames = Arrays.asList("Gluc GP");
             }
@@ -197,7 +198,7 @@ public class IndikoServer {
             needToSendOrderingRecordForQuery = false;
             needToSendEotForRecordForQuery = true;
         } else if (needToSendEotForRecordForQuery) {
-            System.out.println("Creating an End record = ");
+            //System.out.println("Creating an End record = ");
             String tmq = createLimsTerminationRecord(frameNumber, terminationCode);
             sendResponse(tmq, clientSocket);
             needToSendEotForRecordForQuery = false;
@@ -208,7 +209,7 @@ public class IndikoServer {
         } else {
             out.write(EOT);
             out.flush();
-            logger.debug("Sent EOT");
+            //logger.debug("Sent EOT");
         }
     }
 
@@ -225,18 +226,18 @@ public class IndikoServer {
     }
 
     private void handleEot(OutputStream out) throws IOException {
-        logger.debug("Handling eot");
+        //logger.debug("Handling eot");
         logger.debug(respondingQuery);
         if (respondingQuery) {
             patientDataBundle = LISCommunicator.pullTestOrdersForSampleRequests(patientDataBundle.getQueryRecords().get(0));
-            logger.debug("Starting Transmission to send test requests");
+            //logger.debug("Starting Transmission to send test requests");
             out.write(ENQ);
             out.flush();
-            logger.debug("Sent ENQ");
+            //logger.debug("Sent ENQ");
         } else if (respondingResults) {
             LISCommunicator.pushResults(patientDataBundle);
         } else {
-            logger.debug("Received EOT, ending session");
+            //logger.debug("Received EOT, ending session");
         }
     }
 
@@ -518,18 +519,33 @@ public class IndikoServer {
     }
 
     public static PatientRecord parsePatientRecord(String patientSegment) {
-        String[] fields = patientSegment.split("\\|");
-        int frameNumber = Integer.parseInt(fields[0].replaceAll("[^0-9]", ""));
-        String patientId = fields[1];
-        String additionalId = fields[3]; // assuming index 2 is always empty as per your example
-        String patientName = fields[4];
-        String patientSecondName = fields[6]; // assuming this follows the same unused pattern
-        String patientSex = fields[7];
-        String race = ""; // Not available in the segment
-        String dob = ""; // Date of birth, not available in the segment
-        String patientAddress = fields[11];
-        String patientPhoneNumber = fields[14];
-        String attendingDoctor = fields[15];
+        int frameNumber =0;
+            String patientId = "";
+            String additionalId = ""; // assuming index 2 is always empty as per your example
+            String patientName ="";
+            String patientSecondName =""; // assuming this follows the same unused pattern
+            String patientSex ="";
+            String race = ""; // Not available in the segment
+            String dob = ""; // Date of birth, not available in the segment
+            String patientAddress = "";
+            String patientPhoneNumber = "";
+            String attendingDoctor = "";
+        try {
+            String[] fields = patientSegment.split("\\|");
+            frameNumber = Integer.parseInt(fields[0].replaceAll("[^0-9]", ""));
+             patientId = fields[1];
+             additionalId = fields[3]; // assuming index 2 is always empty as per your example
+             patientName = fields[4];
+             patientSecondName = fields[6]; // assuming this follows the same unused pattern
+             patientSex = fields[7];
+             race = ""; // Not available in the segment
+             dob = ""; // Date of birth, not available in the segment
+             patientAddress = fields[11];
+             patientPhoneNumber = fields[14];
+             attendingDoctor = fields[15];
+        } catch (Exception e) {
+
+        }
 
         // Return a new PatientRecord object using the extracted data
         return new PatientRecord(
@@ -568,14 +584,14 @@ public class IndikoServer {
         // Result value parsing assumes the result is in the fourth field
         double resultValue = 0.0;
         String resultValueString = fields[3];
-        
+
         try {
             resultValue = Double.parseDouble(fields[3]);
             logger.debug("Result value extracted: {}", resultValue);
         } catch (NumberFormatException e) {
             logger.error("Failed to parse result value from segment: {}", resultSegment, e);
         }
-        
+
         // Units and other details
         String resultUnits = fields[4];
         logger.debug("Result units extracted: {}", resultUnits);
@@ -594,20 +610,7 @@ public class IndikoServer {
                 instrumentName,
                 sampleId
         );
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
+
     }
 
     public static OrderRecord parseOrderRecord(String orderSegment) {
