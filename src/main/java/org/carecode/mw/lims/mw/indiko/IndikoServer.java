@@ -116,13 +116,13 @@ public class IndikoServer {
 
                 switch (data) {
                     case ENQ:
-                        logger.debug("Received ENQ");
+//                        logger.debug("Received ENQ");
                         out.write(ACK);
                         out.flush();
-                        logger.debug("Sent ACK");
+//                        logger.debug("Sent ACK");
                         break;
                     case ACK:
-                        logger.debug("ACK Received.");
+//                        logger.debug("ACK Received.");
                         handleAck(clientSocket, out);
                         break;
                     case STX:
@@ -141,10 +141,10 @@ public class IndikoServer {
                         processMessage(message.toString(), clientSocket);
                         out.write(ACK);
                         out.flush();
-                        logger.debug("Sent ACK after STX-ETX block");
+//                        logger.debug("Sent ACK after STX-ETX block");
                         break;
                     case EOT:
-                        logger.debug("EOT Received");
+//                        logger.debug("EOT Received");
                         handleEot(out);
                         break;
                     default:
@@ -175,12 +175,14 @@ public class IndikoServer {
         } else if (needToSendPatientRecordForQuery) {
             logger.debug("Creating Patient record ");
             patientRecord = getPatientDataBundle().getPatientRecord();
-            if (patientRecord.getPatientName() == null) {
-                patientRecord.setPatientName("Buddhika");
+            if (patientRecord != null) {
+                if (patientRecord.getPatientName() == null) {
+                    patientRecord.setPatientName("Buddhika");
+                }
+                patientRecord.setFrameNumber(frameNumber);
+                String pm = createLimsPatientRecord(patientRecord);
+                sendResponse(pm, clientSocket);
             }
-            patientRecord.setFrameNumber(frameNumber);
-            String pm = createLimsPatientRecord(patientRecord);
-            sendResponse(pm, clientSocket);
             frameNumber = 3;
             needToSendPatientRecordForQuery = false;
             needToSendOrderingRecordForQuery = true;
@@ -568,14 +570,14 @@ public class IndikoServer {
         // Result value parsing assumes the result is in the fourth field
         double resultValue = 0.0;
         String resultValueString = fields[3];
-        
+
         try {
             resultValue = Double.parseDouble(fields[3]);
             logger.debug("Result value extracted: {}", resultValue);
         } catch (NumberFormatException e) {
             logger.error("Failed to parse result value from segment: {}", resultSegment, e);
         }
-        
+
         // Units and other details
         String resultUnits = fields[4];
         logger.debug("Result units extracted: {}", resultUnits);
@@ -594,20 +596,7 @@ public class IndikoServer {
                 instrumentName,
                 sampleId
         );
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
+
     }
 
     public static OrderRecord parseOrderRecord(String orderSegment) {
